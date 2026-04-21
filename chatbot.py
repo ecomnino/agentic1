@@ -154,16 +154,13 @@ class ProjectManager:
 def main():
     orchestrator = ProjectManager()
     print("AI Data Team klaar (typ 'exit' om te stoppen)")
-
     while True:
         vraag = input("\nWat wil je laten bouwen? ").strip()
         if vraag.lower() == "exit":
             break
         if not vraag:
             continue
-
         resultaat = orchestrator.create_data_app(vraag)
-
         with open("generated_app.py", "w", encoding="utf-8") as f:
             f.write(resultaat)
 

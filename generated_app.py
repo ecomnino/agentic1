@@ -1,85 +1,80 @@
-import streamlit as st
+Natuurlijk! Hieronder vind je een voorbeeld van hoe je een lokale SQLite-database kunt opzetten en een functie kunt schrijven die gegevens verwerkt en in de database invoegt. We gebruiken de `sqlite3` module voor de database-interacties en `pandas` voor gegevensverwerking.
+
+### Stap 1: Installeren van vereiste pakketten
+Zorg ervoor dat je de benodigde pakketten hebt geïnstalleerd. Je kunt `pandas` installeren met pip als je dat nog niet hebt gedaan:
+
+```bash
+pip install pandas
+```
+
+### Stap 2: Python-code
+
+Hier is een voorbeeld van hoe je een lokale SQLite-database kunt opzetten en een functie kunt schrijven om gegevens te verwerken:
+
+```python
+import sqlite3
 import pandas as pd
-import plotly.express as px
 
-def generate_dummy_data():
-    """
-    Genereert een dummy dataset met namen en geslachten.
+def create_database(db_name):
+    """Maak een SQLite-database aan."""
+    conn = sqlite3.connect(db_name)
+    cursor = conn.cursor()
     
-    Returns:
-        pd.DataFrame: Een DataFrame met 5 rijen en kolommen 'Naam' en 'Geslacht'.
-    """
-    # Definieer de dummy data
-    data = {
-        'Naam': ['Alice', 'Bob', 'Charlie', 'Diana', 'Edward'],
-        'Geslacht': ['Vrouw', 'Man', 'Man', 'Vrouw', 'Man']
-    }
+    # Maak een tabel aan als deze nog niet bestaat
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            age INTEGER NOT NULL,
+            city TEXT NOT NULL
+        )
+    ''')
     
-    # Maak een DataFrame aan
-    df = pd.DataFrame(data)
-    return df
+    conn.commit()
+    conn.close()
 
-def main():
-    """
-    Hoofdfunctie voor de Streamlit-app.
-    """
-    st.title("Dummy Dataset van Namen en Geslacht")
-    st.sidebar.header("Navigatie")
+def process_data(data_frame, db_name):
+    """Verwerk de gegevens en sla ze op in de SQLite-database."""
+    # Controleer of de DataFrame niet leeg is
+    if data_frame.empty:
+        print("De DataFrame is leeg. Geen gegevens om te verwerken.")
+        return
     
-    # Genereer de dummy data
-    dummy_data = generate_dummy_data()
+    # Maak verbinding met de database
+    conn = sqlite3.connect(db_name)
     
-    # Sidebar opties
-    st.sidebar.subheader("Dataset Weergave")
-    show_data = st.sidebar.checkbox("Toon de dataset", value=True)
+    # Sla de gegevens op in de database
+    data_frame.to_sql('data', conn, if_exists='append', index=False)
     
-    if show_data:
-        st.write("Hier is een dummy dataset met namen en geslachten:")
-        st.dataframe(dummy_data)
+    conn.close()
+    print(f"{len(data_frame)} rijen succesvol toegevoegd aan de database.")
 
-    # Grafiek weergeven
-    st.sidebar.subheader("Visualisatie")
-    st.sidebar.write("Bekijk de verdeling van geslachten in de dataset.")
-    
-    # Tellen van geslachten
-    gender_counts = dummy_data['Geslacht'].value_counts().reset_index()
-    gender_counts.columns = ['Geslacht', 'Aantal']
-    
-    # Maak een Plotly grafiek
-    fig = px.bar(gender_counts, x='Geslacht', y='Aantal', 
-                 title='Aantal per Geslacht',
-                 color='Geslacht',
-                 labels={'Aantal': 'Aantal', 'Geslacht': 'Geslacht'},
-                 text='Aantal')
-
-    # Grafiek weergeven in de app
-    st.plotly_chart(fig)
-
+# Voorbeeldgebruik
 if __name__ == "__main__":
-    main()
+    # Stap 1: Maak de database aan
+    db_name = 'local_database.db'
+    create_database(db_name)
+    
+    # Stap 2: Maak een voorbeeld DataFrame aan
+    data = {
+        'name': ['Alice', 'Bob', 'Charlie'],
+        'age': [25, 30, 35],
+        'city': ['Amsterdam', 'Rotterdam', 'Utrecht']
+    }
+    df = pd.DataFrame(data)
+    
+    # Stap 3: Verwerk de gegevens en sla ze op in de database
+    process_data(df, db_name)
+```
 
+### Uitleg van de code:
 
-### Uitleg van de wijzigingen:
+1. **create_database(db_name)**: Deze functie maakt een SQLite-database aan met de naam die je opgeeft. Als de database al bestaat, wordt deze niet opnieuw aangemaakt. De functie maakt ook een tabel aan voor het opslaan van gegevens.
 
-# 1. **Sidebar**: We hebben een sidebar toegevoegd met een header en opties om de dataset weer te geven. Dit maakt de app interactiever en gebruiksvriendelijker.
+2. **process_data(data_frame, db_name)**: Deze functie neemt een Pandas DataFrame en een database naam als argumenten. Het controleert of de DataFrame leeg is en voegt vervolgens de gegevens toe aan de database.
 
-# 2. **Checkbox**: Een checkbox in de sidebar laat de gebruiker toe om de dataset al dan niet weer te geven.
+3. **Voorbeeldgebruik**: In het `if __name__ == "__main__":` blok wordt de database aangemaakt, een voorbeeld DataFrame gemaakt en de gegevens worden verwerkt en opgeslagen in de database.
 
-# 3. **Plotly Grafiek**: We hebben een staafdiagram toegevoegd dat het aantal mannen en vrouwen in de dataset weergeeft. Dit wordt gedaan met behulp van `plotly.express`.
-
-# 4. **Data Verwerking**: We tellen het aantal mannen en vrouwen met `value_counts()` en maken een nieuwe DataFrame voor de grafiek.
-
-# ### Hoe te gebruiken:
-# 1. Zorg ervoor dat je `streamlit`, `pandas` en `plotly` hebt geïnstalleerd. Dit kan je doen met:
-#    ```bash
-#    pip install streamlit pandas plotly
-#    ```
-
-# 2. Sla de code op in een Python-bestand, bijvoorbeeld `app.py`.
-
-# 3. Voer de Streamlit-app uit met het volgende commando:
-#    ```bash
-#    streamlit run app.py
-#    ```
-
-# 4. Open de aangegeven URL in je webbrowser om de app te bekijken. Je kunt de dataset bekijken en de grafiek zien die de verdeling van geslachten toont.
+### Opmerkingen:
+- Zorg ervoor dat je de juiste foutafhandeling toevoegt voor productiecode.
+- Je kunt de structuur van de database en de tabel aanpassen aan je specifieke behoeften.

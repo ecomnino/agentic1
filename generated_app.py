@@ -1,3 +1,8 @@
+'''
+sqlite3 jouw_database.db
+''' 
+
+
 import sqlite3
 import pandas as pd
 
